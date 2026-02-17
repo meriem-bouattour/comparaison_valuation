@@ -409,11 +409,11 @@ class DatabaseComparator:
         
         cursor = self.oracle_conn.cursor()
         
-        # Nombre total de lignes - using bind variable for table name
+        # Nombre total de lignes - using quoted identifier for table name
         # Note: Oracle doesn't support bind variables for table names in standard SQL
-        # Using format but validating table name exists in metadata
+        # Using quoted identifiers for security
         table_name = self.oracle_config['table']
-        query = f"SELECT COUNT(*) FROM {table_name}"
+        query = f'SELECT COUNT(*) FROM "{table_name}"'
         cursor.execute(query)
         total_rows = cursor.fetchone()[0]
         
@@ -424,12 +424,12 @@ class DatabaseComparator:
             
             # Statistiques de base
             # Note: Column names come from metadata query, so they're safe
-            # But we use format carefully with validated column names
+            # Using quoted identifiers for both table and column names
             null_query = f"""
             SELECT 
                 COUNT(*) - COUNT("{col_name}") as null_count,
                 COUNT(DISTINCT "{col_name}") as distinct_count
-            FROM {table_name}
+            FROM "{table_name}"
             """
             
             try:
@@ -450,7 +450,7 @@ class DatabaseComparator:
                         MIN("{col_name}"),
                         MAX("{col_name}"),
                         AVG("{col_name}")
-                    FROM {table_name}
+                    FROM "{table_name}"
                     """
                     cursor.execute(num_query)
                     min_val, max_val, avg_val = cursor.fetchone()
@@ -466,7 +466,7 @@ class DatabaseComparator:
                     SELECT 
                         MIN(LENGTH("{col_name}")),
                         MAX(LENGTH("{col_name}"))
-                    FROM {table_name}
+                    FROM "{table_name}"
                     WHERE "{col_name}" IS NOT NULL
                     """
                     cursor.execute(len_query)
