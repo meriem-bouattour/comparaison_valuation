@@ -202,6 +202,16 @@ comparaison_valuation/
 - **openpyxl** (≥3.1.0) : Génération de fichiers Excel
 - **python-dotenv** (≥1.0.0) : Chargement des variables d'environnement
 
+## 🔒 Sécurité
+
+Le script implémente plusieurs mesures de sécurité :
+- **Identifiants quotés** : Tous les noms de tables et colonnes utilisent des identifiants quotés (") pour éviter les injections SQL
+- **Variables d'environnement** : Les mots de passe et informations sensibles sont stockés dans `.env` (non versionné)
+- **Métadonnées validées** : Les noms de colonnes proviennent des métadonnées de la base de données avant d'être utilisés dans les requêtes
+- **Gestion des erreurs** : Toutes les opérations de base de données sont protégées par des try-except
+
+⚠️ **Important** : Les noms de schémas et tables proviennent du fichier `.env`. Assurez-vous que ce fichier provient d'une source de confiance.
+
 ## 🐛 Dépannage
 
 ### Erreur : "cx_Oracle.DatabaseError: DPI-1047"

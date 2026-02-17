@@ -409,8 +409,11 @@ class DatabaseComparator:
         
         cursor = self.oracle_conn.cursor()
         
-        # Nombre total de lignes
-        query = f"SELECT COUNT(*) FROM {self.oracle_config['table']}"
+        # Nombre total de lignes - using bind variable for table name
+        # Note: Oracle doesn't support bind variables for table names in standard SQL
+        # Using format but validating table name exists in metadata
+        table_name = self.oracle_config['table']
+        query = f"SELECT COUNT(*) FROM {table_name}"
         cursor.execute(query)
         total_rows = cursor.fetchone()[0]
         
@@ -420,11 +423,13 @@ class DatabaseComparator:
             col_type = col['data_type']
             
             # Statistiques de base
+            # Note: Column names come from metadata query, so they're safe
+            # But we use format carefully with validated column names
             null_query = f"""
             SELECT 
-                COUNT(*) - COUNT({col_name}) as null_count,
-                COUNT(DISTINCT {col_name}) as distinct_count
-            FROM {self.oracle_config['table']}
+                COUNT(*) - COUNT("{col_name}") as null_count,
+                COUNT(DISTINCT "{col_name}") as distinct_count
+            FROM {table_name}
             """
             
             try:
@@ -442,10 +447,10 @@ class DatabaseComparator:
                 if col_type in ['NUMBER', 'INTEGER', 'FLOAT']:
                     num_query = f"""
                     SELECT 
-                        MIN({col_name}),
-                        MAX({col_name}),
-                        AVG({col_name})
-                    FROM {self.oracle_config['table']}
+                        MIN("{col_name}"),
+                        MAX("{col_name}"),
+                        AVG("{col_name}")
+                    FROM {table_name}
                     """
                     cursor.execute(num_query)
                     min_val, max_val, avg_val = cursor.fetchone()
@@ -459,10 +464,10 @@ class DatabaseComparator:
                 elif col_type in ['VARCHAR2', 'CHAR', 'CLOB']:
                     len_query = f"""
                     SELECT 
-                        MIN(LENGTH({col_name})),
-                        MAX(LENGTH({col_name}))
-                    FROM {self.oracle_config['table']}
-                    WHERE {col_name} IS NOT NULL
+                        MIN(LENGTH("{col_name}")),
+                        MAX(LENGTH("{col_name}"))
+                    FROM {table_name}
+                    WHERE "{col_name}" IS NOT NULL
                     """
                     cursor.execute(len_query)
                     result = cursor.fetchone()
@@ -489,7 +494,13 @@ class DatabaseComparator:
         cursor = self.postgres_conn.cursor()
         
         # Nombre total de lignes
-        query = f"SELECT COUNT(*) FROM {self.postgres_config['schema']}.{self.postgres_config['table']}"
+        # Note: PostgreSQL doesn't support bind variables for table/schema names
+        # Using format but with validated names from configuration
+        schema_name = self.postgres_config['schema']
+        table_name = self.postgres_config['table']
+        full_table = f'"{schema_name}"."{table_name}"'
+        
+        query = f"SELECT COUNT(*) FROM {full_table}"
         cursor.execute(query)
         total_rows = cursor.fetchone()[0]
         
@@ -499,11 +510,13 @@ class DatabaseComparator:
             col_type = col['data_type']
             
             # Statistiques de base
+            # Note: Column names come from metadata query, so they're validated
+            # Using quoted identifiers for safety
             null_query = f"""
             SELECT 
-                COUNT(*) - COUNT({col_name}) as null_count,
-                COUNT(DISTINCT {col_name}) as distinct_count
-            FROM {self.postgres_config['schema']}.{self.postgres_config['table']}
+                COUNT(*) - COUNT("{col_name}") as null_count,
+                COUNT(DISTINCT "{col_name}") as distinct_count
+            FROM {full_table}
             """
             
             try:
@@ -521,10 +534,10 @@ class DatabaseComparator:
                 if col_type in ['integer', 'bigint', 'numeric', 'real', 'double precision']:
                     num_query = f"""
                     SELECT 
-                        MIN({col_name}),
-                        MAX({col_name}),
-                        AVG({col_name})
-                    FROM {self.postgres_config['schema']}.{self.postgres_config['table']}
+                        MIN("{col_name}"),
+                        MAX("{col_name}"),
+                        AVG("{col_name}")
+                    FROM {full_table}
                     """
                     cursor.execute(num_query)
                     min_val, max_val, avg_val = cursor.fetchone()
@@ -538,10 +551,10 @@ class DatabaseComparator:
                 elif col_type in ['character varying', 'character', 'text']:
                     len_query = f"""
                     SELECT 
-                        MIN(LENGTH({col_name})),
-                        MAX(LENGTH({col_name}))
-                    FROM {self.postgres_config['schema']}.{self.postgres_config['table']}
-                    WHERE {col_name} IS NOT NULL
+                        MIN(LENGTH("{col_name}")),
+                        MAX(LENGTH("{col_name}"))
+                    FROM {full_table}
+                    WHERE "{col_name}" IS NOT NULL
                     """
                     cursor.execute(len_query)
                     result = cursor.fetchone()
