@@ -1,0 +1,47 @@
+# Environment variables (contains sensitive information)
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Excel reports (generated files)
+rapport_comparaison.xlsx
+rapport_*.xlsx
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
